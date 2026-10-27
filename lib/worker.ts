@@ -134,7 +134,7 @@ async function runCodingAgent(root: string, job: Job) {
     { type: "function", name: "write_file", description: "Create or replace a UTF-8 text file inside the repository. Do not edit secrets or dependencies.", parameters: { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"], additionalProperties: false }, strict: true },
     { type: "function", name: "finish_task", description: "Finish once the requested code changes are implemented. Provide a brief summary.", parameters: { type: "object", properties: { summary: { type: "string" } }, required: ["summary"], additionalProperties: false }, strict: true },
   ] }];
-  const history: unknown[] = [{ role: "user", content: [{ type: "input_text", text: `Repository: ${job.repository}\nBase branch: ${job.baseBranch}\nUser requirement:\n${job.requirement}` }] }];
+  const history: unknown[] = [{ role: "user", content: [{ type: "input_text", text: `Repository: ${job.repository}\nBase branch: ${job.baseBranch}\nAI Employee role: ${job.employee}\nUser requirement:\n${job.requirement}` }] }];
   let result = await requestModel(job, tools, history);
   for (let step = 0; step < MAX_STEPS; step++) {
     const calls = result.output.filter((item): item is ToolCall => item.type === "function_call");

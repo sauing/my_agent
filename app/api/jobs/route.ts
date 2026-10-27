@@ -6,8 +6,9 @@ import { accessToken, modelCatalog } from "@/lib/chatgpt-auth";
 
 export const runtime = "nodejs";
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null) as { requirement?: string; repository?: string; baseBranch?: string; model?: string } | null;
+  const body = await request.json().catch(() => null) as { requirement?: string; employee?: string; repository?: string; baseBranch?: string; model?: string } | null;
   const requirement = body?.requirement?.trim();
+  const employee = body?.employee?.trim() || "software-builder";
   const repository = body?.repository?.trim();
   const baseBranch = body?.baseBranch?.trim();
   const model = body?.model;
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
   if (!catalog.models.some(option => option.slug === model)) return NextResponse.json({ error: "That model is not available to your ChatGPT account. Refresh the page and choose an available model." }, { status: 400 });
   try { await accessToken(); } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Reconnect ChatGPT and try again." }, { status: 503 }); }
   if (!process.env.GITHUB_TOKEN) return NextResponse.json({ error: "Set GITHUB_TOKEN in .env.local with repository contents and pull request permissions." }, { status: 503 });
-  const job: Job = { id: randomUUID(), requirement, repository, baseBranch, model, usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 }, status: "queued", logs: ["Task queued."], createdAt: new Date().toISOString() };
+  const job: Job = { id: randomUUID(), requirement, employee, repository, baseBranch, model, usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 }, status: "queued", logs: [`${employee} queued.`], createdAt: new Date().toISOString() };
   await saveJob(job);
   void runJob(job).catch(async (error: unknown) => { job.status = "failed"; job.logs.push(`Stopped: ${error instanceof Error ? error.message : "Unexpected worker error."}`); await saveJob(job); });
   return NextResponse.json(job, { status: 202 });
